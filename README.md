@@ -92,7 +92,7 @@ Fork this repository
 
 Enable GitHub Pages in repository settings
 
-Access your calculator at https://ufumzy.github.io/nigeria-tax-calculator
+Access your calculator at https://ufumzy.github.io/nigeriataxcalculator/
 
 💻 Usage
 Basic Usage
