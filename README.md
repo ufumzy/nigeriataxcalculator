@@ -84,9 +84,13 @@ Open in any modern web browser
 Start calculating taxes immediately
 
 Option 2: Clone Repository
+
 bash
-git clone https://github.com/ufumzy/nigeria-tax-calculator.git
-cd nigeria-tax-calculator
+
+Git clone https://github.com/ufumzy/nigeria-tax-calculator.git
+
+Cd nigeria-tax-calculator
+
 Option 3: GitHub Pages
 Fork this repository
 
