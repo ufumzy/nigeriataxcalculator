@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Universal Tax Calculator</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+  .container {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    padding: 30px;
+    max-width: 800px;
+    width: 100%;
+  }
+  h1 {
+    text-align: center;
+    color: #4a148c;
+    margin-bottom: 30px;
+  }
+  label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+  }
+  input[type="number"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 1.1em;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+  }
+  button {
+    background-color: #4a148c;
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    font-size: 1.2em;
+    border-radius: 8px;
+    cursor: pointer;
+    width: 100%;
+    transition: background-color 0.3s ease;
+  }
+  button:hover {
+    background-color: #6a1b9a;
+  }
+  .results, .comparison-table {
+    margin-top: 20px;
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.9em;
+  }
+  .results th, .results td, .comparison-table th, .comparison-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: right;
+  }
+  .results th, .comparison-table th {
+    background-color: #4a148c;
+    color: white;
+    text-align: center;
+  }
+  .hidden {
+    display: none;
+  }
+  .savings-positive {
+    color: green;
+    font-weight: bold;
+  }
+  .savings-negative {
+    color: red;
+    font-weight: bold;
+  }
+  .better {
+    background-color: #dcedc8;
+  }
+  #conclusion {
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .greeting {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    justify-content: center;
+  }
+  .greeting img {
+    width: 60px;
+    margin-right: 15px;
+  }
+  .greeting h2 {
+    color: #4a148c;
+    margin: 0;
+  }
+  .amount-words {
+    font-style: italic;
+    color: #666;
+    font-size: 0.8em;
+  }
+  .support-section {
+    background: linear-gradient(135deg, #ff9a9e, #fecfef);
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 20px;
+    text-align: center;
+  }
+  .support-section h3 {
+    color: #4a148c;
+    margin-bottom: 15px;
+  }
+  .account-info {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 15px;
+    border-left: 4px solid #4a148c;
+  }
+  .account-info h4 {
+    color: #4a148c;
+    margin-bottom: 10px;
+  }
+  .account-details {
+    font-family: 'Courier New', monospace;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+<div class="container">
+  <div class="greeting">
+    <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" alt="Kneeling person" />
+    <h2>Welcome to Tax Calculator</h2>
+  </div>
+  <h1>Universal Tax Calculator</h1>
+  <label for="grossIncome">Enter your gross annual income (₦):</label>
+  <input type="number" id="grossIncome" min="1000" placeholder="Enter any amount from ₦1,000" />
+  <button onclick="calculateTax()">Calculate Tax</button>
+
+  <div id="resultsContainer" class="hidden">
+    <h3>Current Law Tax Details</h3>
+    <table class="results">
+      <tr><th>Item</th><th>Amount (₦)</th><th>Amount in Words</th></tr>
+      <tr><td>Gross Annual Income</td><td id="currentGrossAnnualIncome"></td><td id="currentGrossAnnualIncomeWords" class="amount-words"></td></tr>
+      <tr><td>Personal Relief</td><td id="currentPersonalRelief"></td><td id="currentPersonalReliefWords" class="amount-words"></td></tr>
+      <tr><td>Consolidated Relief</td><td id="currentConsolidatedRelief"></td><td id="currentConsolidatedReliefWords" class="amount-words"></td></tr>
+      <tr><td>Taxable Income</td><td id="currentTaxableIncome"></td><td id="currentTaxableIncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 1 Income</td><td id="currentBracket1Income"></td><td id="currentBracket1IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 1 Tax</td><td id="currentBracket1Tax"></td><td id="currentBracket1TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 2 Income</td><td id="currentBracket2Income"></td><td id="currentBracket2IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 2 Tax</td><td id="currentBracket2Tax"></td><td id="currentBracket2TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 3 Income</td><td id="currentBracket3Income"></td><td id="currentBracket3IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 3 Tax</td><td id="currentBracket3Tax"></td><td id="currentBracket3TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 4 Income</td><td id="currentBracket4Income"></td><td id="currentBracket4IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 4 Tax</td><td id="currentBracket4Tax"></td><td id="currentBracket4TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 5 Income</td><td id="currentBracket5Income"></td><td id="currentBracket5IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 5 Tax</td><td id="currentBracket5Tax"></td><td id="currentBracket5TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 6 Income</td><td id="currentBracket6Income"></td><td id="currentBracket6IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 6 Tax</td><td id="currentBracket6Tax"></td><td id="currentBracket6TaxWords" class="amount-words"></td></tr>
+      <tr><td><strong>Total Tax Due</strong></td><td id="currentTotalTaxDue" style="font-weight: bold;"></td><td id="currentTotalTaxDueWords" class="amount-words" style="font-weight: bold;"></td></tr>
+      <tr><td>Monthly Tax</td><td id="currentMonthlyTax"></td><td id="currentMonthlyTaxWords" class="amount-words"></td></tr>
+      <tr><td>Effective Tax Rate</td><td id="currentEffectiveTaxRate"></td><td></td></tr>
+    </table>
+
+    <h3>Proposed Law Tax Details</h3>
+    <table class="results">
+      <tr><th>Item</th><th>Amount (₦)</th><th>Amount in Words</th></tr>
+      <tr><td>Gross Annual Income</td><td id="proposedGrossAnnualIncome"></td><td id="proposedGrossAnnualIncomeWords" class="amount-words"></td></tr>
+      <tr><td>Rent Relief</td><td id="proposedRentRelief"></td><td id="proposedRentReliefWords" class="amount-words"></td></tr>
+      <tr><td>Taxable Income</td><td id="proposedTaxableIncome"></td><td id="proposedTaxableIncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 1 Income</td><td id="proposedBracket1Income"></td><td id="proposedBracket1IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 1 Tax</td><td id="proposedBracket1Tax"></td><td id="proposedBracket1TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 2 Income</td><td id="proposedBracket2Income"></td><td id="proposedBracket2IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 2 Tax</td><td id="proposedBracket2Tax"></td><td id="proposedBracket2TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 3 Income</td><td id="proposedBracket3Income"></td><td id="proposedBracket3IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 3 Tax</td><td id="proposedBracket3Tax"></td><td id="proposedBracket3TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 4 Income</td><td id="proposedBracket4Income"></td><td id="proposedBracket4IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 4 Tax</td><td id="proposedBracket4Tax"></td><td id="proposedBracket4TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 5 Income</td><td id="proposedBracket5Income"></td><td id="proposedBracket5IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 5 Tax</td><td id="proposedBracket5Tax"></td><td id="proposedBracket5TaxWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 6 Income</td><td id="proposedBracket6Income"></td><td id="proposedBracket6IncomeWords" class="amount-words"></td></tr>
+      <tr><td>Tax Bracket 6 Tax</td><td id="proposedBracket6Tax"></td><td id="proposedBracket6TaxWords" class="amount-words"></td></tr>
+      <tr><td><strong>Total Tax Due</strong></td><td id="proposedTotalTaxDue" style="font-weight: bold;"></td><td id="proposedTotalTaxDueWords" class="amount-words" style="font-weight: bold;"></td></tr>
+      <tr><td>Monthly Tax</td><td id="proposedMonthlyTax"></td><td id="proposedMonthlyTaxWords" class="amount-words"></td></tr>
+      <tr><td>Effective Tax Rate</td><td id="proposedEffectiveTaxRate"></td><td></td></tr>
+    </table>
+  </div>
+
+  <div id="comparisonResults" class="hidden">
+    <h3>Tax System Comparison</h3>
+    <table class="comparison-table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Current Law</th>
+          <th>Proposed Law</th>
+          <th>Difference</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Annual Tax</td>
+          <td id="compCurrentAnnualTax"></td>
+          <td id="compProposedAnnualTax"></td>
+          <td id="compAnnualTaxDiff"></td>
+        </tr>
+        <tr>
+          <td>Monthly Tax</td>
+          <td id="compCurrentMonthlyTax"></td>
+          <td id="compProposedMonthlyTax"></td>
+          <td id="compMonthlyTaxDiff"></td>
+        </tr>
+        <tr>
+          <td>Effective Tax Rate</td>
+          <td id="compCurrentRate"></td>
+          <td id="compProposedRate"></td>
+          <td id="compRateDiff"></td>
+        </tr>
+        <tr>
+          <td>Monthly Take Home</td>
+          <td id="compCurrentTakeHome"></td>
+          <td id="compProposedTakeHome"></td>
+          <td id="compTakeHomeDiff"></td>
+        </tr>
+      </tbody>
+    </table>
+    <div id="conclusion"></div>
+  </div>
+</div>
+
+<script>
+function formatCurrency(amount) {
+  return new Intl.NumberFormat('en-NG').format(amount);
+}
+
+function numberToWords(num) {
+    const units = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine"];
+    const teens = ["Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
+    const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
+    const thousands = ["", "Thousand", "Million", "Billion"];
+
+    function wordify(num) {
+        if (num === 0) return [];
+        else if (num < 10) return [units[num]];
+        else if (num < 20) return [teens[num - 10]];
+        else if (num < 100) return [tens[Math.floor(num / 10)]].concat(wordify(num % 10));
+        else return [units[Math.floor(num / 100)]].concat(["Hundred"]).concat(wordify(num % 100));
+    }
+
+    if (num === 0) return "Zero";
+
+    let words = [];
+    let group = 0;
+
+    while (num > 0) {
+        if (num % 1000 !== 0) {
+            words = wordify(num % 1000).concat(thousands[group] ? [thousands[group]] : []).concat(words);
+        }
+        num = Math.floor(num / 1000);
+        group++;
+    }
+
+    return words.join(' ').trim() + " Naira";
+}
+
+function calculateTax() {
+  const grossIncome = parseFloat(document.getElementById('grossIncome').value);
+  if (isNaN(grossIncome) || grossIncome <= 0) {
+    Swal.fire('Error', 'Please enter a valid gross annual income.', 'error');
+    return;
+  }
+
+  calculateCurrentLawTax(grossIncome);
+  calculateProposedLawTax(grossIncome);
+  compareTaxSystems();
+  document.getElementById('resultsContainer').classList.remove('hidden');
+  document.getElementById('comparisonResults').classList.remove('hidden');
+
+  // Show different greetings based on income level
+  if (grossIncome >= 5000000) {
+    // High earners get special treatment with support request
+    Swal.fire({
+      title: 'I greet you boss!',
+      html: `
+        <div style="text-align: center;">
+          <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width: 80px; margin-bottom: 15px;" alt="Kneeling person" />
+          <p style="font-size: 18px; color: #4a148c; font-weight: bold;">Your tax calculation is complete, boss!</p>
+          <p style="color: #666;">If you found this calculator helpful and would like to support our work, would you like to see our account details?</p>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: 'Yes, show account number',
+      cancelButtonText: 'No, thanks',
+      confirmButtonColor: '#4a148c',
+      cancelButtonColor: '#6c757d',
+      imageWidth: 0,
+      imageHeight: 0
+    }).then((result) => {
+      if (result.isConfirmed) {
+        showAccountDetails();
+      } else {
+        Swal.fire({
+          title: 'Thank you boss!',
+          html: `
+            <div style="text-align: center;">
+              <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width: 60px; margin-bottom: 10px;" alt="Kneeling person" />
+              <p>We appreciate you using our calculator. Have a great day!</p>
+            </div>
+          `,
+          confirmButtonText: 'Close',
+          confirmButtonColor: '#4a148c',
+          timer: 3000,
+          imageWidth: 0,
+          imageHeight: 0
+        });
+      }
+    });
+  } else {
+    // Regular users get standard greeting
+    Swal.fire({
+      title: 'Calculation Complete!',
+      text: 'Your tax calculation has been completed successfully.',
+      icon: 'success',
+      confirmButtonText: 'Great!',
+      confirmButtonColor: '#4a148c'
+    });
+  }
+}
+
+function showAccountDetails() {
+  Swal.fire({
+    title: 'Thank you for your support, boss!',
+    html: `
+      <div style="text-align: center;">
+        <img src="https://cdn-icons-png.flaticon.com/512/616/616408.png" style="width: 60px; margin-bottom: 15px;" alt="Kneeling person" />
+        <p style="color: #4a148c; font-weight: bold; margin-bottom: 20px;">I deeply appreciate your kindness, boss!</p>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border-left: 4px solid #4a148c; text-align: left;">
+          <h4 style="color: #4a148c; margin-bottom: 15px; text-align: center;">💳 Account Details</h4>
+          
+          <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Courier New', monospace;">
+            <p><strong>Bank:</strong> Access Bank</p>
+            <p><strong>Account Name:</strong> Tax Calculator Support</p>
+            <p><strong>Account Number:</strong> 1234567890</p>
+          </div>
+          
+          <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Courier New', monospace; margin-top: 10px;">
+            <p><strong>Alternative - GTBank:</strong></p>
+            <p><strong>Account Name:</strong> Calculator Development</p>
+            <p><strong>Account Number:</strong> 0987654321</p>
+          </div>
+          
+          <div style="background: white; padding: 15px; border-radius: 8px; border: 1px solid #ddd; font-family: 'Courier New', monospace; margin-top: 10px;">
+            <p><strong>Bitcoin Wallet:</strong></p>
+            <p style="word-break: break-all; font-size: 12px;">bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</p>
+          </div>
+        </div>
+        
+        <p style="margin-top: 20px; color: #666; font-style: italic;">Your support helps us maintain and improve this calculator for everyone. Thank you boss! 🙏</p>
+      </div>
+    `,
+    confirmButtonText: 'Close',
+    confirmButtonColor: '#4a148c',
+    width: '600px',
+    imageWidth: 0,
+    imageHeight: 0
+  });
+}
+
+function calculateCurrentLawTax(grossIncome) {
+  const personalRelief = grossIncome * 0.2;
+  const consolidatedRelief = grossIncome * 0.01 > 200000 ? grossIncome * 0.01 : 200000;
+  const taxableIncome = Math.max(0, grossIncome - (personalRelief + consolidatedRelief));
+  let remainingIncome = taxableIncome;
+  let totalTax = 0;
+  
+  const bracket1 = Math.min(300000, Math.max(0, remainingIncome));
+  const tax1 = bracket1 * 0.07;
+  remainingIncome -= bracket1;
+  
+  const bracket2 = Math.min(300000, Math.max(0, remainingIncome));
+  const tax2 = bracket2 * 0.11;
+  remainingIncome -= bracket2;
+  
+  const bracket3 = Math.min(500000, Math.max(0, remainingIncome));
+  const tax3 = bracket3 * 0.15;
+  remainingIncome -= bracket3;
+  
+  const bracket4 = Math.min(500000, Math.max(0, remainingIncome));
+  const tax4 = bracket4 * 0.19;
+  remainingIncome -= bracket4;
+  
+  const bracket5 = Math.min(1600000, Math.max(0, remainingIncome));
+  const tax5 = bracket5 * 0.21;
+  remainingIncome -= bracket5;
+  
+  const bracket6 = Math.max(0, remainingIncome);
+  const tax6 = bracket6 * 0.24;
+  
+  totalTax = tax1 + tax2 + tax3 + tax4 + tax5 + tax6;
+  const effectiveTaxRate = grossIncome > 0 ? (totalTax / grossIncome) * 100 : 0;
+  const monthlySalary = grossIncome / 12;
+  const monthlyTax = totalTax / 12;
+
+  // Display numerical values
+  document.getElementById('currentGrossAnnualIncome').textContent = formatCurrency(grossIncome);
+  document.getElementById('currentPersonalRelief').textContent = '(' + formatCurrency(personalRelief) + ')';
+  document.getElementById('currentConsolidatedRelief').textContent = '(' + formatCurrency(consolidatedRelief) + ')';
+  document.getElementById('currentTaxableIncome').textContent = formatCurrency(taxableIncome);
+  document.getElementById('currentBracket1Income').textContent = formatCurrency(bracket1);
+  document.getElementById('currentBracket1Tax').textContent = formatCurrency(tax1);
+  document.getElementById('currentBracket2Income').textContent = formatCurrency(bracket2);
+  document.getElementById('currentBracket2Tax').textContent = formatCurrency(tax2);
+  document.getElementById('currentBracket3Income').textContent = formatCurrency(bracket3);
+  document.getElementById('currentBracket3Tax').textContent = formatCurrency(tax3);
+  document.getElementById('currentBracket4Income').textContent = formatCurrency(bracket4);
+  document.getElementById('currentBracket4Tax').textContent = formatCurrency(tax4);
+  document.getElementById('currentBracket5Income').textContent = formatCurrency(bracket5);
+  document.getElementById('currentBracket5Tax').textContent = formatCurrency(tax5);
+  document.getElementById('currentBracket6Income').textContent = formatCurrency(bracket6);
+  document.getElementById('currentBracket6Tax').textContent = formatCurrency(tax6);
+  document.getElementById('currentTotalTaxDue').textContent = formatCurrency(totalTax);
+  document.getElementById('currentMonthlyTax').textContent = formatCurrency(monthlyTax);
+  document.getElementById('currentEffectiveTaxRate').textContent = effectiveTaxRate.toFixed(1) + '%';
+
+  // Display amounts in words
+  document.getElementById('currentGrossAnnualIncomeWords').textContent = numberToWords(Math.round(grossIncome));
+  document.getElementById('currentPersonalReliefWords').textContent = numberToWords(Math.round(personalRelief));
+  document.getElementById('currentConsolidatedReliefWords').textContent = numberToWords(Math.round(consolidatedRelief));
+  document.getElementById('currentTaxableIncomeWords').textContent = numberToWords(Math.round(taxableIncome));
+  document.getElementById('currentBracket1IncomeWords').textContent = numberToWords(Math.round(bracket1));
+  document.getElementById('currentBracket1TaxWords').textContent = numberToWords(Math.round(tax1));
+  document.getElementById('currentBracket2IncomeWords').textContent = numberToWords(Math.round(bracket2));
+  document.getElementById('currentBracket2TaxWords').textContent = numberToWords(Math.round(tax2));
+  document.getElementById('currentBracket3IncomeWords').textContent = numberToWords(Math.round(bracket3));
+  document.getElementById('currentBracket3TaxWords').textContent = numberToWords(Math.round(tax3));
+  document.getElementById('currentBracket4IncomeWords').textContent = numberToWords(Math.round(bracket4));
+  document.getElementById('currentBracket4TaxWords').textContent = numberToWords(Math.round(tax4));
+  document.getElementById('currentBracket5IncomeWords').textContent = numberToWords(Math.round(bracket5));
+  document.getElementById('currentBracket5TaxWords').textContent = numberToWords(Math.round(tax5));
+  document.getElementById('currentBracket6IncomeWords').textContent = numberToWords(Math.round(bracket6));
+  document.getElementById('currentBracket6TaxWords').textContent = numberToWords(Math.round(tax6));
+  document.getElementById('currentTotalTaxDueWords').textContent = numberToWords(Math.round(totalTax));
+  document.getElementById('currentMonthlyTaxWords').textContent = numberToWords(Math.round(monthlyTax));
+
+  window.currentLawTax = { annualTax: totalTax, monthlyTax: monthlyTax, effectiveRate: effectiveTaxRate, monthlyTakeHome: monthlySalary - monthlyTax };
+}
+
+function calculateProposedLawTax(grossIncome) {
+  const personalRelief = 0;
+  const rentRelief = 200000;
+  const taxableIncome = Math.max(0, grossIncome - rentRelief);
+  let remainingIncome = taxableIncome;
+  let totalTax = 0;
+  
+  const bracket1 = Math.min(800000, Math.max(0, remainingIncome));
+  const tax1 = 0;
+  remainingIncome -= bracket1;
+  
+  const bracket2 = Math.min(2200000, Math.max(0, remainingIncome));
+  const tax2 = bracket2 * 0.15;
+  remainingIncome -= bracket2;
+  
+  const bracket3 = Math.min(9000000, Math.max(0, remainingIncome));
+  const tax3 = bracket3 * 0.18;
+  remainingIncome -= bracket3;
+  
+  const bracket4 = Math.min(13000000, Math.max(0, remainingIncome));
+  const tax4 = bracket4 * 0.21;
+  remainingIncome -= bracket4;
+  
+  const bracket5 = Math.min(25000000, Math.max(0, remainingIncome));
+  const tax5 = bracket5 * 0.23;
+  remainingIncome -= bracket5;
+  
+  const bracket6 = Math.max(0, remainingIncome);
+  const tax6 = bracket6 * 0.25;
+  
+  totalTax = tax1 + tax2 + tax3 + tax4 + tax5 + tax6;
+  const effectiveTaxRate = grossIncome > 0 ? (totalTax / grossIncome) * 100 : 0;
+  const monthlySalary = grossIncome / 12;
+  const monthlyTax = totalTax / 12;
+
+  // Display numerical values
+  document.getElementById('proposedGrossAnnualIncome').textContent = formatCurrency(grossIncome);
+  document.getElementById('proposedRentRelief').textContent = '(' + formatCurrency(rentRelief) + ')';
+  document.getElementById('proposedTaxableIncome').textContent = formatCurrency(taxableIncome);
+  document.getElementById('proposedBracket1Income').textContent = formatCurrency(bracket1);
+  document.getElementById('proposedBracket1Tax').textContent = formatCurrency(tax1);
+  document.getElementById('proposedBracket2Income').textContent = formatCurrency(bracket2);
+  document.getElementById('proposedBracket2Tax').textContent = formatCurrency(tax2);
+  document.getElementById('proposedBracket3Income').textContent = formatCurrency(bracket3);
+  document.getElementById('proposedBracket3Tax').textContent = formatCurrency(tax3);
+  document.getElementById('proposedBracket4Income').textContent = formatCurrency(bracket4);
+  document.getElementById('proposedBracket4Tax').textContent = formatCurrency(tax4);
+  document.getElementById('proposedBracket5Income').textContent = formatCurrency(bracket5);
+  document.getElementById('proposedBracket5Tax').textContent = formatCurrency(tax5);
+  document.getElementById('proposedBracket6Income').textContent = formatCurrency(bracket6);
+  document.getElementById('proposedBracket6Tax').textContent = formatCurrency(tax6);
+  document.getElementById('proposedTotalTaxDue').textContent = formatCurrency(totalTax);
+  document.getElementById('proposedMonthlyTax').textContent = formatCurrency(monthlyTax);
+  document.getElementById('proposedEffectiveTaxRate').textContent = effectiveTaxRate.toFixed(1) + '%';
+
+  // Display amounts in words
+  document.getElementById('proposedGrossAnnualIncomeWords').textContent = numberToWords(Math.round(grossIncome));
+  document.getElementById('proposedRentReliefWords').textContent = numberToWords(Math.round(rentRelief));
+  document.getElementById('proposedTaxableIncomeWords').textContent = numberToWords(Math.round(taxableIncome));
+  document.getElementById('proposedBracket1IncomeWords').textContent = numberToWords(Math.round(bracket1));
+  document.getElementById('proposedBracket1TaxWords').textContent = numberToWords(Math.round(tax1));
+  document.getElementById('proposedBracket2IncomeWords').textContent = numberToWords(Math.round(bracket2));
+  document.getElementById('proposedBracket2TaxWords').textContent = numberToWords(Math.round(tax2));
+  document.getElementById('proposedBracket3IncomeWords').textContent = numberToWords(Math.round(bracket3));
+  document.getElementById('proposedBracket3TaxWords').textContent = numberToWords(Math.round(tax3));
+  document.getElementById('proposedBracket4IncomeWords').textContent = numberToWords(Math.round(bracket4));
+  document.getElementById('proposedBracket4TaxWords').textContent = numberToWords(Math.round(tax4));
+  document.getElementById('proposedBracket5IncomeWords').textContent = numberToWords(Math.round(bracket5));
+  document.getElementById('proposedBracket5TaxWords').textContent = numberToWords(Math.round(tax5));
+  document.getElementById('proposedBracket6IncomeWords').textContent = numberToWords(Math.round(bracket6));
+  document.getElementById('proposedBracket6TaxWords').textContent = numberToWords(Math.round(tax6));
+  document.getElementById('proposedTotalTaxDueWords').textContent = numberToWords(Math.round(totalTax));
+  document.getElementById('proposedMonthlyTaxWords').textContent = numberToWords(Math.round(monthlyTax));
+
+  window.proposedLawTax = { annualTax: totalTax, monthlyTax: monthlyTax, effectiveRate: effectiveTaxRate, monthlyTakeHome: monthlySalary - monthlyTax };
+}
+
+function compareTaxSystems() {
+  const current = window.currentLawTax;
+  const proposed = window.proposedLawTax;
+  
+  const annualTaxDiff = current.annualTax - proposed.annualTax;
+  const monthlyTaxDiff = current.monthlyTax - proposed.monthlyTax;
+  const rateDiff = current.effectiveRate - proposed.effectiveRate;
+  const takeHomeDiff = proposed.monthlyTakeHome - current.monthlyTakeHome;
+
+  document.getElementById('compCurrentAnnualTax').textContent = formatCurrency(current.annualTax);
+  document.getElementById('compProposedAnnualTax').textContent = formatCurrency(proposed.annualTax);
+  document.getElementById('compCurrentMonthlyTax').textContent = formatCurrency(current.monthlyTax);
+  document.getElementById('compProposedMonthlyTax').textContent = formatCurrency(proposed.monthlyTax);
+  document.getElementById('compCurrentRate').textContent = current.effectiveRate.toFixed(1) + '%';
+  document.getElementById('compProposedRate').textContent = proposed.effectiveRate.toFixed(1) + '%';
+  document.getElementById('compCurrentTakeHome').textContent = formatCurrency(current.monthlyTakeHome);
+  document.getElementById('compProposedTakeHome').textContent = formatCurrency(proposed.monthlyTakeHome);
+
+  const annualTaxDiffEl = document.getElementById('compAnnualTaxDiff');
+  annualTaxDiffEl.textContent = annualTaxDiff > 0 ? '₦' + formatCurrency(annualTaxDiff) + ' less' : '₦' + formatCurrency(Math.abs(annualTaxDiff)) + ' more';
+  annualTaxDiffEl.className = annualTaxDiff > 0 ? 'savings-positive' : 'savings-negative';
+
+  const monthlyTaxDiffEl = document.getElementById('compMonthlyTaxDiff');
+  monthlyTaxDiffEl.textContent = monthlyTaxDiff > 0 ? '₦' + formatCurrency(monthlyTaxDiff) + ' less' : '₦' + formatCurrency(Math.abs(monthlyTaxDiff)) + ' more';
+  monthlyTaxDiffEl.className = monthlyTaxDiff > 0 ? 'savings-positive' : 'savings-negative';
+
+  const rateDiffEl = document.getElementById('compRateDiff');
+  rateDiffEl.textContent = rateDiff > 0 ? rateDiff.toFixed(1) + '% less' : Math.abs(rateDiff).toFixed(1) + '% more';
+  rateDiffEl.className = rateDiff > 0 ? 'savings-positive' : 'savings-negative';
+
+  const takeHomeDiffEl = document.getElementById('compTakeHomeDiff');
+  takeHomeDiffEl.textContent = takeHomeDiff > 0 ? '₦' + formatCurrency(takeHomeDiff) + ' more' : '₦' + formatCurrency(Math.abs(takeHomeDiff)) + ' less';
+  takeHomeDiffEl.className = takeHomeDiff > 0 ? 'savings-positive' : 'savings-negative';
+
+  const conclusionEl = document.getElementById('conclusion');
+  if (proposed.annualTax < current.annualTax) {
+    conclusionEl.textContent = `With the proposed tax law, you would pay ₦${formatCurrency(monthlyTaxDiff)} less in monthly tax and take home ₦${formatCurrency(takeHomeDiff)} more per month compared to the current tax law.`;
+    conclusionEl.style.backgroundColor = '#d4edda';
+    conclusionEl.style.color = '#155724';
+  } else if (proposed.annualTax > current.annualTax) {
+    conclusionEl.textContent = `With the proposed tax law, you would pay ₦${formatCurrency(Math.abs(monthlyTaxDiff))} more in monthly tax and take home ₦${formatCurrency(Math.abs(takeHomeDiff))} less per month compared to the current tax law.`;
+    conclusionEl.style.backgroundColor = '#f8d7da';
+    conclusionEl.style.color = '#721c24';
+  } else {
+    conclusionEl.textContent = 'Both tax systems result in the same tax amount for your income level.';
+    conclusionEl.style.backgroundColor = '#fff3cd';
+    conclusionEl.style.color = '#856404';
+  }
+
+  const comparisonTable = document.querySelector('.comparison-table');
+  const rows = comparisonTable.querySelectorAll('tr');
+  for (let i = 1; i < rows.length; i++) {
+    const cells = rows[i].querySelectorAll('td');
+    if (i === rows.length - 1) {
+      if (proposed.monthlyTakeHome > current.monthlyTakeHome) {
+        cells[2].classList.add('better');
+      } else if (current.monthlyTakeHome > proposed.monthlyTakeHome) {
+        cells[1].classList.add('better');
+      }
+    } else {
+      if (proposed.annualTax < current.annualTax) {
+        cells[2].classList.add('better');
+      } else if (current.annualTax < proposed.annualTax) {
+        cells[1].classList.add('better');
+      }
+    }
+  }
+}
+</script>
+</body>
+</html>
